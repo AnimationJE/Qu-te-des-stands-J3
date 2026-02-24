@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quête des Stands – Point Animations</title>
+<style>
+body{
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,#2a0033,#0b0010);
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+.box{
+  max-width:420px;
+  margin:auto;
+  background:rgba(0,0,0,0.65);
+  padding:22px;
+  border-radius:18px;
+  box-shadow:0 0 25px rgba(255,95,210,0.25);
+}
+h1,h2{
+  color:#ff5fd2;
+  text-shadow:0 0 8px rgba(255,95,210,0.6);
+}
+.stand-image{
+  width:100%;
+  max-width:360px;
+  margin:15px auto;
+  border-radius:14px;
+  box-shadow:0 0 20px rgba(255,95,210,0.35);
+}
+input{
+  width:80%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:20px;
+  border:none;
+  text-align:center;
+}
+button{
+  margin-top:14px;
+  padding:12px 22px;
+  background:linear-gradient(135deg,#ff5fd2,#b84dff);
+  border:none;
+  border-radius:30px;
+  font-weight:bold;
+  color:black;
+  cursor:pointer;
+}
+button:hover{ transform:scale(1.05); }
+.success{ color:#6bffb0; margin-top:12px; }
+.error{ color:#ff6b6b; margin-top:12px; }
+.mission-complete{
+  font-size:28px;
+  font-weight:bold;
+  color:#6bffb0;
+  text-shadow:0 0 8px #6bffb0,0 0 16px #6bffb0,0 0 24px #6bffb0;
+  animation:pulse 1.2s infinite alternate;
+  margin-top:20px;
+}
+@keyframes pulse{
+  from{transform:scale(1);opacity:0.7;}
+  to{transform:scale(1.08);opacity:1;}
+}
+</style>
+</head>
+<body>
+<div class="box">
+<h1 id="title">Quête des Stands</h1>
+<div id="content"></div>
+</div>
+<script>
+/* ========================= RESET CACHÉ ========================= */
+const title = document.getElementById("title");
+let pressTimer;
+title.addEventListener("mousedown",startReset);
+title.addEventListener("touchstart",startReset);
+title.addEventListener("mouseup",cancelReset);
+title.addEventListener("mouseleave",cancelReset);
+title.addEventListener("touchend",cancelReset);
+function startReset(){
+  pressTimer=setTimeout(()=>{
+    localStorage.removeItem("progress");
+    localStorage.removeItem("startTime");
+    alert("Progression réinitialisée");
+    location.reload();
+  },3000);
+}
+function cancelReset(){ clearTimeout(pressTimer); }
+
+/* ========================= TIMER MIN 10 MIN ========================= */
+const MIN_TIME = 10 * 60 * 1000;
+let startTime = localStorage.getItem("startTime");
+if(!startTime){
+  startTime = Date.now();
+  localStorage.setItem("startTime",startTime);
+}else{
+  startTime = parseInt(startTime);
+}
+
+/* ========================= IMAGE ACCUEIL ========================= */
+const presentationImage="images/presentation.png";
+
+/* ========================= STANDS ========================= */
+const stands=[
+{ title:"Point Animations", text:"🎤✨ Joue à la Quête des Stands ! ✨🎤\n\nPars explorer les stands et réponds à leurs énigmes." },
+{ title:"Stand L135 – Karaté Dojo Marseillais", question:"Combien de ceintures noires le Karaté Dojo Marseillais a eu dans ses rands depuis sa création en 2014 ?", answers:["45","quarante cinq", "quarante-cinq", "Quarante cinq", "Quarante-cinq"] },
+{ title:"Stand E037 – Game Academy", question:"Quelles sont les formations proposées à Game Academy ?", answers:["Game artist et Game developer","Game Artist et Game Developer", "game artist et game developer", "Game artist, game developer", "Game artist, Game developer", "Game Artist, Game Developer"] },
+{ title:"Stand E182 – Association Animaniak", question:"Quel logiciel utilise l'association Animaniak pour proposer du karaoke ?", answers:["Karaoke Mugen","Karaoke mugen", "karaoke mugen", "KARAOKE MUGEN"] },
+{ title:"Stand E198 – Chinafi", question:"Le kanji « 夢 » (yume) correspond à quel mot ?", answers:["Rêve","rêve","Reve", "reve"] },
+{ title:"Stand D038 – Doud dans le retro", question:"De quelle console à quelle console peut-on jouer à Mario Kart sur le stand Doud dans le rétro ?", answers:["De la Super Nintendo à la Wii", "Super Nintendo à Wii", "Super Nintendo-Wii", "De la SNES à la Wii", "Super Nintendo à la Wii", "de la Super Nintendo à la Wii", "super Nintendo à wii", "super nintendo-wii", "de la SNES à la Wii", "super Nintendo à la wii"] }, 
+{ title:"Stand E190 – Event Yaoi", question:"Quelle est la traduction française du mot japonais : megane ? ", answers:["Lunettes", "lunettes", "Des lunettes", "des lunettes", "DES LUNETTES"] },
+{ title:"Stand E139 – DT Workshop", question:"Comment s'appelle la mascotte de DT WORKSHOP ?", answers:["Bob le Boug", "Bob le boug", "bob le boug", "BOB LE BOUG",] },
+{ title:"Stand L172 – Pimp Ton Perso", question:"Quel jeu de rôle est toujours programmé à 10h sur le stand Pimp Ton Perso ?", answers:["Phasmoboo","phasmoboo", "PHASMOBOO"] },
+{ title:"Stand B030 – Aoi Sora Cosplay", question:"Comment appelle-t-on quelqu'un qui fait du cosplay ?", answers:["Un cosplayer", "Un Cosplayer", "Cosplayer", "cosplayer", "un cosplayer", "un Cosplayer"] },
+{ title:"Stand G027 – Tekken Marseille", question:"Combien de personnages féminins y a-t-il dans Tekken 8 ?", answers:["12", "Douze", "douze", "DOUZE"] },
+{ title:"Stand L160 – Star Hill Team", question:"Qu'est ce qu'un diorama ?", answers:["Maquette pour exposition de figurine","8","Huit", "huit", "huit bornes", "Huit bornes", "8 borne", "Huit borne", "huit borne"] },
+{ title:"Stand G033 – France Esport Sud", question:"Quel âge à le joueur moyen de jeu vidéo en France ?", answers:["40","40 ans","quarante ans","Quarante ans"] }
+];
+
+/* ========================= SAUVEGARDE ========================= */
+let progress=parseInt(localStorage.getItem("progress"))||0;
+let current=progress;
+const content=document.getElementById("content");
+
+/* ========================= NORMALISATION ========================= */
+function normalize(text){
+return text.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.trim();
+}
+
+/* ========================= RENDER ========================= */
+function render(){
+if(current>=stands.length){
+  const elapsed = Date.now() - startTime;
+  if(elapsed < MIN_TIME){
+    const remaining = Math.ceil((MIN_TIME - elapsed)/60000);
+    content.innerHTML = `
+<p class="error">
+    ⛔ On ne la fait pas à Chibi Dino, pris la main dans le sac petit tricheur ! 😈<br><br>
+    Retourne au Point Animations pour recommencer.<br>
+</p>
+<img src="images/holmes.png" class="stand-image">
+`;
+    return;
+  }
+  content.innerHTML=`
+<div class="mission-complete">
+  MISSION COMPLETE
+</div>
+<p class="success">
+  🎉 Bravo !<br><br>
+  Présente cet écran au staff du Point Animations.
+</p>`;
+  return;
+}
+const stand=stands[current];
+if(!stand.question){
+content.innerHTML=`
+<h2>${stand.title}</h2>
+<img src="${presentationImage}" class="stand-image">
+<p>${stand.text.replace(/\n/g,"<br>")}</p>
+<button onclick="next()">Commencer</button>`;
+return;
+}
+content.innerHTML=`
+<h2>${stand.title}</h2>
+<p>${stand.question}</p>
+<input id="answer" placeholder="Ta réponse">
+<br>
+<button onclick="check()">Valider</button>
+<div id="message"></div>`;
+}
+
+/* ========================= CHECK ========================= */
+function check(){
+const answer=document.getElementById("answer");
+const message=document.getElementById("message");
+const user=normalize(answer.value);
+const validAnswers=stands[current].answers.map(a=>normalize(a));
+const ok=validAnswers.some(a=>user.includes(a));
+if(ok){
+progress=current+1;
+localStorage.setItem("progress",progress);
+message.innerHTML=`
+<p class="success">Bonne réponse !</p>
+<button onclick="next()">Continuer ➜</button>`;
+}else{
+message.innerHTML=`<p class="error">Mauvaise réponse, observe bien le stand 👀</p>`;
+}
+}
+
+/* ========================= NEXT ========================= */
+function next(){
+current++;
+render();
+}
+
+/* ========================= START ========================= */
+render();
+</script>
+</body>
+
+</html>
