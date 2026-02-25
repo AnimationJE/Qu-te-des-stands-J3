@@ -201,42 +201,50 @@ content.innerHTML=`
 
 /* ========================= CHECK ========================= */
 
+function isNumeric(str){
+  return /^[0-9]+$/.test(str);
+}
+
 function check(){
 const answer=document.getElementById("answer");
 const message=document.getElementById("message");
-const user=normalize(answer.value);
-  
+const userRaw=answer.value.trim();
+const user=normalize(userRaw);
+
 if(!user){
   message.innerHTML=`<p class="error">Entre une réponse 😉</p>`;
   return;
 }
+
 const validAnswers=stands[current].answers.map(a=>normalize(a));
 
-const ok=validAnswers.some(a=>{
-  // égalité
-  if(user === a) return true;
-  // contient
-  if(user.includes(a)) return true;
-  // tolérance fautes (max 2 caractères d'erreur)
- if(levenshtein(user,a) <= Math.max(1, Math.floor(a.length * 0.3))) return true;
-  return false;
-});
+// Vérifie si la question attend une réponse numérique
+const numericExpected = validAnswers.every(a => isNumeric(a));
+
+let ok=false;
+
+if(numericExpected){
+  // COMPARAISON STRICTE (pas de tolérance)
+  ok = validAnswers.includes(userRaw.trim());
+}else{
+  // MODE TOLÉRANT (comme avant)
+  ok = validAnswers.some(a=>{
+    if(user === a) return true;
+    if(user.includes(a)) return true;
+    if(levenshtein(user,a) <= Math.max(1, Math.floor(a.length * 0.3))) return true;
+    return false;
+  });
+}
 
 if(ok){
-progress=current+1;
-localStorage.setItem("progress",progress);
-message.innerHTML=`
+  progress=current+1;
+  localStorage.setItem("progress",progress);
+  message.innerHTML=`
 <p class="success">Bonne réponse !</p>
 <button onclick="next()">Continuer ➜</button>`;
 }else{
-message.innerHTML=`<p class="error">Mauvaise réponse, observe bien le stand 👀</p>`;
+  message.innerHTML=`<p class="error">Mauvaise réponse, observe bien le stand 👀</p>`;
 }
-}
-  
-/* ========================= NEXT ========================= */
-function next(){
-current++;
-render();
 }
 
 /* ========================= START ========================= */
@@ -245,3 +253,4 @@ render();
 </body>
 
 </html>
+
