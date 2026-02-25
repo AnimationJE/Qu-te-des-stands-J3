@@ -106,18 +106,18 @@ const presentationImage="images/presentation.png";
 /* ========================= STANDS ========================= */
 const stands=[
 { title:"Point Animations", text:"🎤✨ Joue à la Quête des Stands ! ✨🎤\n\nPars explorer les stands et réponds à leurs énigmes." },
-{ title:"Stand L135 – Karaté Dojo Marseillais", question:"Combien de ceintures noires le Karaté Dojo Marseillais a eu dans ses rands depuis sa création en 2014 ?", answers:["45","quarante cinq", "quarante-cinq", "Quarante cinq", "Quarante-cinq"] },
-{ title:"Stand E037 – Game Academy", question:"Quelles sont les formations proposées à Game Academy ?", answers:["Game artist et Game developer","Game Artist et Game Developer", "game artist et game developer", "Game artist, game developer", "Game artist, Game developer", "Game Artist, Game Developer"] },
-{ title:"Stand E182 – Association Animaniak", question:"Quel logiciel utilise l'association Animaniak pour proposer du karaoke ?", answers:["Karaoke Mugen","Karaoke mugen", "karaoke mugen", "KARAOKE MUGEN"] },
-{ title:"Stand E198 – Chinafi", question:"Le kanji « 夢 » (yume) correspond à quel mot ?", answers:["Rêve","rêve","Reve", "reve"] },
-{ title:"Stand D038 – Doud dans le retro", question:"De quelle console à quelle console peut-on jouer à Mario Kart sur le stand Doud dans le rétro ?", answers:["De la Super Nintendo à la Wii", "Super Nintendo à Wii", "Super Nintendo-Wii", "De la SNES à la Wii", "Super Nintendo à la Wii", "de la Super Nintendo à la Wii", "super Nintendo à wii", "super nintendo-wii", "de la SNES à la Wii", "super Nintendo à la wii"] }, 
-{ title:"Stand E190 – Event Yaoi", question:"Quelle est la traduction française du mot japonais : megane ? ", answers:["Lunettes", "lunettes", "Des lunettes", "des lunettes", "DES LUNETTES"] },
-{ title:"Stand E139 – DT Workshop", question:"Comment s'appelle la mascotte de DT WORKSHOP ?", answers:["Bob le Boug", "Bob le boug", "bob le boug", "BOB LE BOUG",] },
-{ title:"Stand L172 – Pimp Ton Perso", question:"Quel jeu de rôle est toujours programmé à 10h sur le stand Pimp Ton Perso ?", answers:["Phasmoboo","phasmoboo", "PHASMOBOO"] },
-{ title:"Stand B030 – Aoi Sora Cosplay", question:"Comment appelle-t-on quelqu'un qui fait du cosplay ?", answers:["Un cosplayer", "Un Cosplayer", "Cosplayer", "cosplayer", "un cosplayer", "un Cosplayer"] },
-{ title:"Stand G027 – Tekken Marseille", question:"Combien de personnages féminins y a-t-il dans Tekken 8 ?", answers:["12", "Douze", "douze", "DOUZE"] },
-{ title:"Stand L160 – Star Hill Team", question:"Qu'est ce qu'un diorama ?", answers:["Maquette pour exposition de figurine","8","Huit", "huit", "huit bornes", "Huit bornes", "8 borne", "Huit borne", "huit borne"] },
-{ title:"Stand G033 – France Esport Sud", question:"Quel âge à le joueur moyen de jeu vidéo en France ?", answers:["40","40 ans","quarante ans","Quarante ans"] }
+{ title:"Stand L135 – Karaté Dojo Marseillais", question:"Combien de ceintures noires le Karaté Dojo Marseillais a eu dans ses rands depuis sa création en 2014 ?", answers:["45","quarante cinq"] },
+{ title:"Stand E037 – Game Academy", question:"Quelles sont les formations proposées à Game Academy ?", answers:["game artist et game developer"] },
+{ title:"Stand E182 – Association Animaniak", question:"Quel logiciel utilise l'association Animaniak pour proposer du karaoke ?", answers:["karaoke mugen"] },
+{ title:"Stand E198 – Chinafi", question:"Le kanji « 夢 » (yume) correspond à quel mot ?", answers:["rêve"] },
+{ title:"Stand D038 – Doud dans le retro", question:"De quelle console à quelle console peut-on jouer à Mario Kart sur le stand Doud dans le rétro ?", answers:["super nintendo à wii"] }, 
+{ title:"Stand E190 – Event Yaoi", question:"A quel anime le dojinshi "Replace" par Ozone présent sur notre stand fait-il référence ?", answers:["kuroko's basket", "kuroko no basket"] },
+{ title:"Stand E139 – DT Workshop", question:"Comment s'appelle la mascotte de DT WORKSHOP ?", answers:["bob le boug"] },
+{ title:"Stand L172 – Pimp Ton Perso", question:"Quel jeu de rôle est toujours programmé à 10h sur le stand Pimp Ton Perso ?", answers:["phasmoboo"] },
+{ title:"Stand B030 – Aoi Sora Cosplay", question:"Comment appelle-t-on quelqu'un qui fait du cosplay ?", answers:["cosplayer"] },
+{ title:"Stand G027 – Tekken Marseille", question:"Combien de personnages féminins y a-t-il dans Tekken 8 ?", answers:["12", "douze"] },
+{ title:"Stand L160 – Star Hill Team", question:"Qu'est ce qu'un diorama ?", answers:["maquette exposition de figurine"] },
+{ title:"Stand J150 – ASSL Provence", question:"Quelle est l'année de création de l'ASSL Provence ?", answers:["2016"] }
 ];
 
 /* ========================= SAUVEGARDE ========================= */
@@ -127,10 +127,33 @@ const content=document.getElementById("content");
 
 /* ========================= NORMALISATION ========================= */
 function normalize(text){
-return text.toLowerCase()
+return text
+.toLowerCase()
 .normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
+.replace(/[\u0300-\u036f]/g,"") // retire accents
+.replace(/[^a-z0-9\s]/g,"") // retire ponctuation
+.replace(/\s+/g," ") // espaces multiples
 .trim();
+}
+function levenshtein(a, b) {
+const matrix = [];
+for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+for (let i = 1; i <= b.length; i++) {
+  for (let j = 1; j <= a.length; j++) {
+    if (b[i - 1] === a[j - 1]) {
+      matrix[i][j] = matrix[i - 1][j - 1];
+    } else {
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j - 1] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j] + 1
+      );
+    }
+  }
+}
+return matrix[b.length][a.length];
 }
 
 /* ========================= RENDER ========================= */
@@ -177,12 +200,28 @@ content.innerHTML=`
 }
 
 /* ========================= CHECK ========================= */
+
 function check(){
 const answer=document.getElementById("answer");
 const message=document.getElementById("message");
 const user=normalize(answer.value);
+  
+if(!user){
+  message.innerHTML=`<p class="error">Entre une réponse 😉</p>`;
+  return;
+}
 const validAnswers=stands[current].answers.map(a=>normalize(a));
-const ok=validAnswers.some(a=>user.includes(a));
+
+const ok=validAnswers.some(a=>{
+  // égalité
+  if(user === a) return true;
+  // contient
+  if(user.includes(a)) return true;
+  // tolérance fautes (max 2 caractères d'erreur)
+ if(levenshtein(user,a) <= Math.max(1, Math.floor(a.length * 0.3))) return true;
+  return false;
+});
+
 if(ok){
 progress=current+1;
 localStorage.setItem("progress",progress);
@@ -193,7 +232,7 @@ message.innerHTML=`
 message.innerHTML=`<p class="error">Mauvaise réponse, observe bien le stand 👀</p>`;
 }
 }
-
+  
 /* ========================= NEXT ========================= */
 function next(){
 current++;
