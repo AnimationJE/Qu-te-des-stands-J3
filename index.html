@@ -101,10 +101,10 @@ if(!startTime){
 }
 
 /* ========================= IMAGE ACCUEIL ========================= */
-const presentationImage="images/presentation.png";
+const presentationImage = "images/presentation.png";
 
 /* ========================= STANDS ========================= */
-const stands=[
+const stands = [
 { title:"Point Animations", text:"🎤✨ Joue à la Quête des Stands ! ✨🎤\n\nPars explorer les stands et réponds à leurs énigmes." },
 { title:"Stand L135 – Karaté Dojo Marseillais", question:"Combien de ceintures noires le Karaté Dojo Marseillais a eu dans ses rands depuis sa création en 2014 (en chiffres) ?", answers:["45"] },
 { title:"Stand E037 – Game Academy", question:"Quelles sont les formations proposées à Game Academy ?", answers:["game artist et game developer"] },
@@ -121,76 +121,73 @@ const stands=[
 ];
 
 /* ========================= SAUVEGARDE ========================= */
-let progress=parseInt(localStorage.getItem("progress"))||0;
-let current=progress;
-const content=document.getElementById("content");
+let progress = parseInt(localStorage.getItem("progress"));
+if(isNaN(progress) || progress < 0 || progress >= stands.length){
+  progress = 0;
+  localStorage.setItem("progress",0);
+}
+let current = progress;
+const content = document.getElementById("content");
 
 /* ========================= NORMALISATION ========================= */
 function normalize(text){
-return text
-.toLowerCase()
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"") // retire accents
-.replace(/[^a-z0-9\s]/g,"") // retire ponctuation
-.replace(/\s+/g," ") // espaces multiples
-.trim();
+  return text.toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9\s]/g,"")
+    .replace(/\s+/g," ").trim();
 }
-function levenshtein(a, b) {
-const matrix = [];
-for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
 
-for (let i = 1; i <= b.length; i++) {
-  for (let j = 1; j <= a.length; j++) {
-    if (b[i - 1] === a[j - 1]) {
-      matrix[i][j] = matrix[i - 1][j - 1];
-    } else {
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j - 1] + 1,
-        matrix[i][j - 1] + 1,
-        matrix[i - 1][j] + 1
+function levenshtein(a, b) {
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b[i - 1] === a[j - 1]) matrix[i][j] = matrix[i - 1][j - 1];
+      else matrix[i][j] = Math.min(
+        matrix[i - 1][j - 1]+1,
+        matrix[i][j - 1]+1,
+        matrix[i - 1][j]+1
       );
     }
   }
-}
-return matrix[b.length][a.length];
+  return matrix[b.length][a.length];
 }
 
 /* ========================= RENDER ========================= */
 function render(){
-if(current>=stands.length){
-  const elapsed = Date.now() - startTime;
-  if(elapsed < MIN_TIME){
-    const remaining = Math.ceil((MIN_TIME - elapsed)/60000);
-    content.innerHTML = `
+  if(current >= stands.length){
+    const elapsed = Date.now() - startTime;
+    if(elapsed < MIN_TIME){
+      content.innerHTML = `
 <p class="error">
-    ⛔ On ne la fait pas à Chibi Dino, pris la main dans le sac petit tricheur ! 😈<br><br>
-    Retourne au Point Animations pour recommencer.<br>
+⛔ On ne la fait pas à Chibi Dino, pris la main dans le sac petit tricheur ! 😈<br><br>
+Retourne au Point Animations pour recommencer.<br>
 </p>
-<img src="images/holmes.png" class="stand-image">
-`;
+<img src="images/holmes.png" class="stand-image">`;
+      return;
+    }
+    content.innerHTML = `
+<div class="mission-complete">MISSION COMPLETE</div>
+<p class="success">
+🎉 Bravo !<br><br>
+Présente cet écran au staff du Point Animations.
+</p>`;
     return;
   }
-  content.innerHTML=`
-<div class="mission-complete">
-  MISSION COMPLETE
-</div>
-<p class="success">
-  🎉 Bravo !<br><br>
-  Présente cet écran au staff du Point Animations.
-</p>`;
-  return;
-}
-const stand=stands[current];
-if(!stand.question){
-content.innerHTML=`
+
+  const stand = stands[current];
+
+  if(!stand.question){
+    content.innerHTML = `
 <h2>${stand.title}</h2>
 <img src="${presentationImage}" class="stand-image">
 <p>${stand.text.replace(/\n/g,"<br>")}</p>
 <button onclick="next()">Commencer</button>`;
-return;
-}
-content.innerHTML=`
+    return;
+  }
+
+  content.innerHTML = `
 <h2>${stand.title}</h2>
 <p>${stand.question}</p>
 <input id="answer" placeholder="Ta réponse">
@@ -200,61 +197,59 @@ content.innerHTML=`
 }
 
 /* ========================= CHECK ========================= */
-
-function isNumeric(str){
-  return /^[0-9]+$/.test(str);
-}
+function isNumeric(str){ return /^[0-9]+$/.test(str); }
 
 function check(){
-const answer=document.getElementById("answer");
-const message=document.getElementById("message");
-const userRaw=answer.value.trim();
-const user=normalize(userRaw);
+  const answer = document.getElementById("answer");
+  const message = document.getElementById("message");
+  const userRaw = answer.value.trim();
+  const user = normalize(userRaw);
 
-if(!user){
-  message.innerHTML=`<p class="error">Entre une réponse 😉</p>`;
-  return;
-}
+  if(!user){
+    message.innerHTML = `<p class="error">Entre une réponse 😉</p>`;
+    return;
+  }
 
-const validAnswers=stands[current].answers.map(a=>normalize(a));
+  const validAnswers = stands[current].answers.map(a=>normalize(a));
+  const numericExpected = validAnswers.every(a => isNumeric(a));
 
-// Vérifie si la question attend une réponse numérique
-const numericExpected = validAnswers.every(a => isNumeric(a));
+  let ok = false;
+  if(numericExpected){
+    ok = validAnswers.includes(userRaw);
+  } else {
+    ok = validAnswers.some(a=>{
+      if(user === a) return true;
+      if(user.includes(a)) return true;
+      if(levenshtein(user,a) <= Math.max(1, Math.floor(a.length * 0.3))) return true;
+      return false;
+    });
+  }
 
-let ok=false;
-
-if(numericExpected){
-  // COMPARAISON STRICTE (pas de tolérance)
-  ok = validAnswers.includes(userRaw.trim());
-}else{
-  // MODE TOLÉRANT (comme avant)
-  ok = validAnswers.some(a=>{
-    if(user === a) return true;
-    if(user.includes(a)) return true;
-    if(levenshtein(user,a) <= Math.max(1, Math.floor(a.length * 0.3))) return true;
-    return false;
-  });
-}
-
-if(ok){
-  progress=current+1;
-  localStorage.setItem("progress",progress);
-  message.innerHTML=`
-<p class="success">Bonne réponse !</p>
+  if(ok){
+    progress = current + 1;
+    localStorage.setItem("progress", progress);
+    message.innerHTML = `<p class="success">Bonne réponse !</p>
 <button onclick="next()">Continuer ➜</button>`;
-}else{
-  message.innerHTML=`<p class="error">Mauvaise réponse, observe bien le stand 👀</p>`;
+  } else {
+    message.innerHTML = `<p class="error">Mauvaise réponse, observe bien le stand 👀</p>`;
+  }
 }
+
+/* ========================= NEXT ========================= */
+function next(){
+  if(current < stands.length - 1){
+    current++;
+    progress = current;
+    localStorage.setItem("progress", progress);
+    render();
+  } else {
+    current = stands.length;
+    render();
+  }
 }
 
 /* ========================= START ========================= */
 render();
 </script>
 </body>
-
 </html>
-
-
-
-
-
